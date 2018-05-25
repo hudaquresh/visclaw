@@ -95,6 +95,7 @@ class ClawPlotData(clawdata.ClawData):
         self.add_attribute('kml_name',"GeoClaw")
         self.add_attribute('kml_starttime',None)
         self.add_attribute('kml_tz_offset',None)
+        self.add_attribute('kml_time_scale',1.0) # Multiply by factor to get seconds
         self.add_attribute('kml_map_topo_to_latlong',None)
         self.add_attribute('kml_user_files',[])
 
@@ -579,6 +580,7 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('plotaxes_dict', {})
         self.add_attribute('type',fig_type)   # = 'each_frame' or 'each_run' or 'each_gauge'
         self.add_attribute('use_for_kml',False)
+        self.add_attribute('kml_gauge_name','Gauge')
         self.add_attribute('kml_dpi',200)
         self.add_attribute('kml_xlimits',None)
         self.add_attribute('kml_ylimits',None)
@@ -587,6 +589,7 @@ class ClawPlotFigure(clawdata.ClawData):
         self.add_attribute('kml_colorbar',None)
         self.add_attribute('kml_use_for_initial_view',False)
         self.add_attribute('kml_show_figure',False)
+        self.add_attribute('kml_maxlevel',20)
         self.add_attribute('kml_figsize',None)    # Figure size;  specify to get rid of aliasing
         self._next_AXES = 0
 
@@ -648,6 +651,7 @@ class ClawPlotAxes(clawdata.ClawData):
         self.add_attribute('title_with_t',True)  # creates title of form 'title at time t = ...'
         self.add_attribute('axescmd','subplot(1,1,1)')
 
+        self.add_attribute('beforeaxes',None)
         self.add_attribute('afteraxes',None)
         self.add_attribute('xlimits',None)
         self.add_attribute('ylimits',None)

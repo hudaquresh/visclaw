@@ -186,6 +186,21 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
             beforeaxes = getattr(plotaxes,'beforeaxes',None)
             current_data = run_str_or_func(beforeaxes,current_data)
                 
+            skip_patches_outside_xylimits = plotaxes.skip_patches_outside_xylimits
+            
+            if skip_patches_outside_xylimits is None:
+                # User didn't set.  Set to True unless there's a mapped grid
+                
+                mapc2p_exists = (plotdata.mapc2p is not None)
+                if not mapc2p_exists:
+                    # check every item in case there's a mapc2p:
+                    for itemname in plotaxes._itemnames:
+                        plotitem = plotaxes.plotitem_dict[itemname]
+                        mapc2p_exists = mapc2p_exists or \
+                                           (plotitem.mapc2p is not None)
+                                           
+                skip_patches_outside_xylimits = not mapc2p_exists
+                
 
             # NOTE: This was rearranged December 2009 to
             # loop over patches first and then over plotitems so that
@@ -206,9 +221,34 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
                 # loop over patches:
                 # ----------------
 
+
+                num_skipped = 0
+                
                 for stateno,state in enumerate(framesoln.states):
 
                     patch = state.patch
+
+                    if skip_patches_outside_xylimits:
+                        # skip patches not visible based on xlimits,ylimits:
+                        if (plotaxes.xlimits is not None) \
+                                & (type(plotaxes.xlimits) is not str):
+                            if (patch.dimensions[0].lower \
+                                        >= plotaxes.xlimits[1]) \
+                                    or  (patch.dimensions[0].upper \
+                                        <= plotaxes.xlimits[0]):
+                                num_skipped += 1
+                                continue  # go to next patch
+    
+                        if len(patch.dimensions) > 1:
+                            # 2d patch
+                            if (plotaxes.ylimits is not None) \
+                                    & (type(plotaxes.ylimits) is not str):
+                                if (patch.dimensions[1].lower \
+                                            >= plotaxes.ylimits[1]) \
+                                        or  (patch.dimensions[1].upper \
+                                            <= plotaxes.ylimits[0]):
+                                    num_skipped += 1
+                                    continue  # go to next patch
 
                     current_data.add_attribute('patch',patch)
                     current_data.add_attribute("level",1)
@@ -305,6 +345,11 @@ def plot_frame(framesolns,plotdata,frameno=0,verbose=False):
 
                     # end of loop over plotitems
                 # end of loop over patches
+
+            if False and num_skipped > 0:
+                # possible warning message:
+                print('Skipped plotting %i patches not visible' % num_skipped)
+
             # end of loop over framesolns
 
 
@@ -534,6 +579,7 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
         current_data.add_attribute('var2',var2)
 
     # Grid mapping:
+    xc_centers = patch.grid.c_centers
 
     if pp['MappedGrid'] is None:
         pp['MappedGrid'] = (pp['mapc2p'] is not None)
@@ -541,9 +587,9 @@ def plotitem1(framesoln, plotitem, current_data, stateno):
     if (pp['MappedGrid'] & (pp['mapc2p'] is None)):
         print("*** Warning: MappedGrid == True but no mapc2p specified")
     elif pp['MappedGrid']:
-        p_centers = pp['mapc2p'](current_data.x)
+        p_centers = pp['mapc2p'](xc_centers[0])
     else:
-        p_centers = current_data.x
+        p_centers = xc_centers[0]
 
     if pp['plot_type'] == '1d_from_2d_data':
         if not pp['map_2d_to_1d']:
@@ -1004,7 +1050,7 @@ def get_var(state, plot_var, current_data):
 #------------------------------------------------------------------------
 def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
              verbose=True, kml_fig=False, kml_dpi=None, kml_figsize=None,
-             bbox_inches='tight'):
+             bbox_inches='tight',close_fig=True):
 #------------------------------------------------------------------------
     """
     Save the current plot to file fname or standard name from frame/fig.
@@ -1045,12 +1091,20 @@ def printfig(fname='',frameno='', figno='', format='png', plotdir='.', \
         a.set_yticks([])
 
         plt.axis('off')
+
         if kml_figsize is not None:
             fig.set_size_inches(kml_figsize[0],kml_figsize[1])
-        plt.savefig(fname, transparent=True, bbox_inches='tight', \
-                      pad_inches=0,dpi=kml_dpi)
+        a.set_frame_on(False)
+        plt.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, 
+                        hspace = 0, wspace = 0)
+        plt.margins(0,0)
+        plt.savefig(fname, transparent=True, bbox_inches='tight',dpi=kml_dpi)
     else:
         plt.savefig(fname, bbox_inches=bbox_inches)
+
+    if close_fig:
+        # to avoid running out of memory when making many plots
+        plt.close(figno)
 
 
 #======================================================================

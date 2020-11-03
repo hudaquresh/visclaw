@@ -228,15 +228,15 @@ def plots2html(plot_pages_data):
                % (ppd.latex_fname,ppd.latex_fname))
     html.write('</tr>\n')
 
-    html.write('<p>\n<tr><td><b>Individual Figures:</b></td> </tr>\n')
-    for pageitem in ppd.pageitem_list:
-        html.write("""
-           <td>%s</td>
-           <td><a href="%s">html</a></td>
-           <td><a href="%s">%s</a></td><tr>
-           """ % (pageitem.html_index_entry, \
-                  pageitem.hname,\
-                  pageitem.fname, pageitem.fname))
+    #html.write('<p>\n<tr><td><b>Individual Figures:</b></td> </tr>\n')
+    #for pageitem in ppd.pageitem_list:
+    #    html.write("""
+    #       <td>%s</td>
+    #       <td><a href="%s">html</a></td>
+    #       <td><a href="%s">%s</a></td><tr>
+    #       """ % (pageitem.html_index_entry, \
+    #              pageitem.hname,\
+    #              pageitem.fname, pageitem.fname))
     html.write('</table>\n')
     html.write('</body></html>')
 
